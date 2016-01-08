@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+  <metadata>
+    <id>Simplicode.ImageProcessor</id>
+    <version>1.2</version>
+    <authors>Simplicode</authors>
+    <owners>Simplicode</owners>
+    <licenseUrl>http://dotnetimageprocessor.codeplex.com/license</licenseUrl>
+    <projectUrl>http://dotnetimageprocessor.codeplex.com/</projectUrl>
+    <!--<iconUrl>http://ICON_URL_HERE_OR_DELETE_THIS_LINE</iconUrl>-->
+    <requireLicenseAcceptance>true</requireLicenseAcceptance>
+    <description>An image processing wrapper around GDI+, allowing you to apply one or more filters against an image source.</description>
+    <tags>gdi image imaging processing converter resizer</tags>
+  </metadata>
+</package>

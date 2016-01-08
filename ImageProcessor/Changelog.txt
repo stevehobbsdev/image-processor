@@ -1,0 +1,24 @@
+Changelog.txt
+
+Steve Hobbs - Simplicode
+elkdanger@googlemail.com
+Project Homepage: http://dotnetimageprocessor.codeplex.com
+
+~~~~~ v1.3
+ - Added a provider model to support plugging in different readers and writers for the different file formats (task #9087)
+ - *Breaking change* - renamed OutputFormat enum to ImageFormatType
+ - Fixed an issue where the resize filter produced the wrong output for ResizeMethod.AspectRatioFill
+
+~~~~~ v1.2
+ - New filters: sepia, invert, crop, greyscale, watermark (image and text)
+
+~~~~~ v1.1.1
+ - The AspectRatioFill resize method now works as intended, new property on ResizeFilter to set the background colour (defaults to White)
+
+~~~~~ v1.1
+ - Added static helper method to ImageProcessor for resizing images
+ - Nuget package compilation support
+ - Allowed access to InterpoliationMode, CompositingQuality and bitmap resolution parameters on ResizeFilter from calling code
+
+~~~~~ v1.0.0.1866
+ - Initial release.
