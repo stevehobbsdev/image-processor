@@ -6,7 +6,7 @@ name "Test shader"
 float3 ambientColor
 float4 baseColor
 float const = 0.7
-float3 anotherConst = (0.3, .2, 1.10)
+float3 anotherConst = (1,1,1)
 
 imageref diffuse = image(0)		# reference the first image
 

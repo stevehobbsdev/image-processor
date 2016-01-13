@@ -12,7 +12,7 @@ namespace ImageProcessor.Shaders
         public static Rule Float = Node(SharedGrammar.Float);
         public static Rule Integer = Node(SharedGrammar.Integer);
         public static Rule Number = Node(Float | Integer);
-        public static Rule Vector = Node(SharedGrammar.Parenthesize(Pattern(@"(\d*(\.\d+))\s*,\s*(\d*(\.\d+))\s*,\s*(\d*(\.\d+))\s*(,\s*(\d*(\.\d+))\s*)?")));
+        public static Rule Vector = Node(SharedGrammar.Parenthesize(Pattern(@"(\d*(\.\d+)?)\s*,\s*(\d*(\.\d+)?)\s*,\s*(\d*(\.\d+)?)\s*(,\s*(\d*(\.\d+)?)\s*)?")));
         public static Rule NumberOrVector = Number | Vector;
         public static Rule ImageReference = Node(StringToken("image") + SharedGrammar.Parenthesize(Integer));
         public static Rule QuotedString = Node(MatchChar('"') + AdvanceWhileNot(MatchChar('"')) + MatchChar('"'));
