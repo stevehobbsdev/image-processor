@@ -4,36 +4,41 @@ using Diggins.Jigsaw;
 
 namespace ImageProcessor.Shaders
 {
-    class ShaderGrammar : SharedGrammar
+    class ShaderGrammar : Grammar
     {
-        public static Rule LineTerminator = MatchChar('\n');
-        public static Rule RecLine = Recursive(() => Line);
+        public static Rule WS = SharedGrammar.WS;
 
         // Primitives
-        public static Rule QuotedString = MatchChar('"') + ZeroOrMore(ExceptCharSet("\"")) + MatchChar('"');
-        public static Rule Bool = MatchRegex(new Regex("[Tt]true|[Ff]alse"));
-        public static Rule Literal = Float | Integer | Bool;
-        public static Rule ArgList = Node(Parenthesize(CommaDelimited(Node(Identifier).SetName("Argument") + WS)));
+        public static Rule Float = Node(SharedGrammar.Float);
+        public static Rule Integer = Node(SharedGrammar.Integer);
+        public static Rule Number = Node(Float | Integer);
+        public static Rule Vector = Node(SharedGrammar.Parenthesize(Pattern(@"(\d*(\.\d+))\s*,\s*(\d*(\.\d+))\s*,\s*(\d*(\.\d+))\s*(,\s*(\d*(\.\d+))\s*)?")));
+        public static Rule NumberOrVector = Number | Vector;
+        public static Rule ImageReference = Node(StringToken("image") + SharedGrammar.Parenthesize(Integer));
+        public static Rule QuotedString = Node(MatchChar('"') + AdvanceWhileNot(MatchChar('"')) + MatchChar('"'));
+        public static Rule Literal = Number | QuotedString;
+        public static Rule Identifier = Node(SharedGrammar.Identifier);
+        public static Rule TypeName = Node(SharedGrammar.Identifier);
 
-        public static Rule Version = Node(MatchRegex(new Regex(@"\d+\.\d+")));
-        public static Rule Comment = MatchChar('#') + AdvanceWhileNot(MatchChar('\n'));
-        public static Rule TypeName = Node(Identifier);
-        public static Rule Symbol = Node(Identifier);
-        public static Rule BlockEnd = Node(MatchString("end") + WS + Opt(LineTerminator));
+        // Expressions
+        public static Rule AssignmentExpr = Node(Identifier + WS + CharToken('=') + (NumberOrVector | ImageReference));
 
-        // Declarations
-        public static Rule ShaderDecl = Node(MatchString("shader") + WS + Version);        
-        public static Rule VarDecl = Node(TypeName + WS + Symbol + WS + Opt(Eq + WS + Node(Literal).SetName("InitialValue")));
-        public static Rule MethodDecl = Node(Identifier.SetName("MethodName") + WS + ArgList);
+        public static Rule MetaStatement = Node(Identifier + WS + Node(Literal).SetName("Value"));
+        public static Rule Comment = CharToken('#') + AdvanceWhileNot(MatchChar('\n'));
+        public static Rule VarDecl = Node(TypeName + WS + (AssignmentExpr | Identifier));
 
-        // Statements
-        public static Rule Declaration = ShaderDecl | VarDecl;
-        public static Rule MethodBlock = Node(MethodDecl + WS + LineTerminator + ZeroOrMore(RecLine) + WS + BlockEnd);
-        public static Rule Statement = Declaration | Comment;
+        public static Rule Statement = VarDecl | MetaStatement | Comment;
+        public static Rule ShaderProgram = Node(ZeroOrMore(Statement + WS) + End);
 
-        public static Rule Line = Statement + WS + Opt(LineTerminator);
+        public static Rule CharToken(char c)
+        {
+            return MatchChar(c) + WS;
+        }
 
-        public static Rule ShaderProgram = Node(ZeroOrMore(Line) + WS + End);
+        public static Rule StringToken(string s)
+        {
+            return MatchString(s) + WS;
+        }
 
         static ShaderGrammar()
         {
