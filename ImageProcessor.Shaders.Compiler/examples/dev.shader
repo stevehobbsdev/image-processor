@@ -16,4 +16,5 @@ imageref diffuse = image(0)		# reference the first image
 	float a = ambientColor
 	float b = (1,1,1)
 
+	return b
 .end

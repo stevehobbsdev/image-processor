@@ -29,11 +29,13 @@ namespace ImageProcessor.Shaders
         // Expressions
         public static Rule AssignmentExpr = Node(Identifier + WS + CharToken('=') + Node(NumberOrVector | ImageReference | Identifier).SetName("Value"));
 
+        // Statements
+        public static Rule ReturnStatement = Node(StringToken("return") + (NumberOrVector | Identifier));
         public static Rule MetaStatement = Node(Identifier + WS + Node(Literal).SetName("Value"));
         public static Rule Comment = CharToken('#') + AdvanceWhileNot(MatchChar('\n'));
         public static Rule VarDecl = Node(TypeName + WS + (AssignmentExpr | Identifier));
 
-        public static Rule Statement = VarDecl | MetaStatement | Comment | Func;
+        public static Rule Statement = ReturnStatement | VarDecl | MetaStatement | Comment | Func;
         public static Rule ShaderProgram = Node(ZeroOrMore(Statement + WS) + End);
 
         public static Rule CharToken(char c)
