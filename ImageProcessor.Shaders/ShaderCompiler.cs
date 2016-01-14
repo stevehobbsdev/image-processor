@@ -12,7 +12,15 @@ namespace ImageProcessor.Shaders
         public void Compile(string path)
         {
             var contents = File.ReadAllText(path);
-            var nodes = ShaderGrammar.ShaderProgram.Parse(contents);            
+
+            try
+            {
+                var nodes = ShaderGrammar.ShaderProgram.Parse(contents);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }            
         }
-    }
+    }   
 }

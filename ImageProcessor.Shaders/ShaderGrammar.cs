@@ -19,23 +19,28 @@ namespace ImageProcessor.Shaders
         public static Rule Literal = Number | QuotedString;
         public static Rule Identifier = Node(SharedGrammar.Identifier);
         public static Rule TypeName = Node(SharedGrammar.Identifier);
+        public static Rule Symbol = Node(Identifier);
 
         public static Rule RecStatements = Recursive(() => ZeroOrMore(Statement + WS));
+        public static Rule RecFuncStatements = Recursive(() => ZeroOrMore(FuncStatement + WS));
+
+        // Methods
         public static Rule Parameter = Node(Identifier);
         public static Rule Arguments = Node(SharedGrammar.Parenthesize(SharedGrammar.CommaDelimited(Parameter)) + WS);
-        public static Rule Func = Node(MatchChar('.') + Identifier + WS + Arguments + RecStatements + WS + MatchString(".end"));
-        public static Rule Symbol = Node(Identifier);
+        public static Rule ReturnStatement = Node(StringToken("return") + (Identifier | Vector | Number) + WS);
+        public static Rule FuncBody = Node(RecFuncStatements + WS);
+        public static Rule Func = Node(MatchChar('.') + Identifier + WS + Arguments + FuncBody + MatchString(".end"));
 
         // Expressions
         public static Rule AssignmentExpr = Node(Identifier + WS + CharToken('=') + Node(NumberOrVector | ImageReference | Identifier).SetName("Value"));
 
         // Statements
-        public static Rule ReturnStatement = Node(StringToken("return") + (NumberOrVector | Identifier));
         public static Rule MetaStatement = Node(Identifier + WS + Node(Literal).SetName("Value"));
         public static Rule Comment = CharToken('#') + AdvanceWhileNot(MatchChar('\n'));
         public static Rule VarDecl = Node(TypeName + WS + (AssignmentExpr | Identifier));
 
-        public static Rule Statement = ReturnStatement | VarDecl | MetaStatement | Comment | Func;
+        public static Rule FuncStatement = ReturnStatement | VarDecl | Comment;
+        public static Rule Statement = VarDecl | MetaStatement | Comment | Func;
         public static Rule ShaderProgram = Node(ZeroOrMore(Statement + WS) + End);
 
         public static Rule CharToken(char c)
