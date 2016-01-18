@@ -23,6 +23,10 @@ namespace ImageProcessor.Shaders
 
         public static Rule RecStatements = Recursive(() => ZeroOrMore(Statement + WS));
         public static Rule RecFuncStatements = Recursive(() => ZeroOrMore(FuncStatement + WS));
+        public static Rule RecExpr = Recursive(() => Expr);
+
+        // Operators
+        public static Rule AssignOp = CharToken('=');
 
         // Methods
         public static Rule Parameter = Node(Identifier);
@@ -32,12 +36,14 @@ namespace ImageProcessor.Shaders
         public static Rule Func = Node(MatchChar('.') + Identifier + WS + Arguments + FuncBody + MatchString(".end"));
 
         // Expressions
-        public static Rule AssignmentExpr = Node(Identifier + WS + CharToken('=') + Node(NumberOrVector | ImageReference | Identifier).SetName("Value"));
+        public static Rule LeafExpr = ImageReference | Identifier | NumberOrVector;
+        public static Rule AssignmentExpr = Node(Identifier + WS + CharToken('=') + RecExpr);
+        public static Rule Expr = (AssignmentExpr | LeafExpr) + WS;
 
         // Statements
         public static Rule MetaStatement = Node(Identifier + WS + Node(Literal).SetName("Value"));
         public static Rule Comment = CharToken('#') + AdvanceWhileNot(MatchChar('\n'));
-        public static Rule VarDecl = Node(TypeName + WS + (AssignmentExpr | Identifier));
+        public static Rule VarDecl = Node(TypeName + WS + Identifier + WS + Opt(AssignOp + Expr));
 
         public static Rule FuncStatement = ReturnStatement | VarDecl | Comment;
         public static Rule Statement = VarDecl | MetaStatement | Comment | Func;
