@@ -16,7 +16,7 @@ namespace ImageProcessor.Shaders
         public static Rule NumberOrVector = Number | Vector;
         public static Rule ImageReference = Node(StringToken("image") + SharedGrammar.Parenthesize(Integer));
         public static Rule QuotedString = Node(MatchChar('"') + AdvanceWhileNot(MatchChar('"')) + MatchChar('"'));
-        public static Rule Literal = Number | QuotedString;
+        public static Rule Constant = Number | QuotedString;
         public static Rule Identifier = Node(SharedGrammar.Identifier);
         public static Rule TypeName = Node(SharedGrammar.Identifier);
         public static Rule Symbol = Node(Identifier);
@@ -36,17 +36,23 @@ namespace ImageProcessor.Shaders
         public static Rule Func = Node(MatchChar('.') + Identifier + WS + Arguments + FuncBody + MatchString(".end"));
 
         // Expressions
-        public static Rule LeafExpr = ImageReference | Identifier | NumberOrVector;
+        public static Rule PrefixOp = Node(SharedGrammar.MatchStringSet("! -"));
+        public static Rule BinaryOp = Node(SharedGrammar.MatchStringSet("== < <= >= > + - * /"));
+        public static Rule PrefixExpr = Node(PrefixOp + Recursive(() => SimpleExpr));
+        public static Rule SimpleExpr = ImageReference | Identifier | Vector | Number;        
         public static Rule AssignmentExpr = Node(Identifier + WS + CharToken('=') + RecExpr);
-        public static Rule Expr = (AssignmentExpr | LeafExpr) + WS;
+        public static Rule UnaryExpr = PrefixExpr | SimpleExpr;
+        public static Rule BinaryExpression = Node(UnaryExpr + WS + BinaryOp + WS + RecExpr);
+        public static Rule Expr = (AssignmentExpr | BinaryExpression | UnaryExpr) + WS;
 
         // Statements
-        public static Rule MetaStatement = Node(Identifier + WS + Node(Literal).SetName("Value"));
+        public static Rule MetaStatement = Node(Identifier + WS + Node(Constant).SetName("Value"));
         public static Rule Comment = CharToken('#') + AdvanceWhileNot(MatchChar('\n'));
-        public static Rule VarDecl = Node(TypeName + WS + Identifier + WS + Opt(AssignOp + Expr));
+        public static Rule VarDecl = Node(StringToken("def") + Identifier + WS + Opt(AssignOp + Expr));
 
-        public static Rule FuncStatement = ReturnStatement | VarDecl | Comment;
-        public static Rule Statement = VarDecl | MetaStatement | Comment | Func;
+        public static Rule ExprStatement = Node(Expr + AdvanceWhileNot(MatchChar('\n')));
+        public static Rule FuncStatement = VarDecl | ReturnStatement | ExprStatement | Comment;
+        public static Rule Statement = VarDecl | ExprStatement | MetaStatement  | Comment | Func;
         public static Rule ShaderProgram = Node(ZeroOrMore(Statement + WS) + End);
 
         public static Rule CharToken(char c)

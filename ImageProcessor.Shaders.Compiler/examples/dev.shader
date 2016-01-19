@@ -3,16 +3,18 @@
 shader 1.0		# always use 1.0
 name "Test shader"
 
-float3 ambientColor
-float4 baseColor
-float const = 0.7
-float3 anotherConst = (1,1,1)
+def ambientColor
+def baseColor
+def myValue = 0.7
+def anotherConst = (1, 1, 1)
+def diffuse = image(0)		# reference the first image
 
-imageref diffuse = image(0)		# reference the first image
+.start(pixel, tu, tv)
 
-.start (pixel, tu, tv)
+# Return a pixel colour here
+	#a = 1 + 2
 
-	# Return a pixel colour here
+	a = baseColor * 0.5 + 1
 
 	return b
 .end
