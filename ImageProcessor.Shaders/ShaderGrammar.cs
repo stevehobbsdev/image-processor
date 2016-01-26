@@ -4,22 +4,27 @@ using Diggins.Jigsaw;
 
 namespace ImageProcessor.Shaders
 {
-    class ShaderGrammar : Grammar
+    internal class ShaderGrammar : Grammar
     {
         public static Rule WS = SharedGrammar.WS;
 
         // Primitives
-        public static Rule Float = Node(SharedGrammar.Float);
-        public static Rule Integer = Node(SharedGrammar.Integer);
+        public static Rule Float = Node(Opt(MatchChar('-')) + SharedGrammar.Float);
+        public static Rule Integer = Node(Opt(MatchChar('-')) + SharedGrammar.Integer);
         public static Rule Number = Node(Float | Integer);
-        public static Rule Vector = Node(SharedGrammar.Parenthesize(Pattern(@"(\d*(\.\d+)?)\s*,\s*(\d*(\.\d+)?)\s*,\s*(\d*(\.\d+)?)\s*(,\s*(\d*(\.\d+)?))?")));
+
+        public static Rule Vector = Node(CharToken('|') 
+            + Node(Number).SetName("r") + WS 
+            + CharToken(',') + Node(Number).SetName("g") + WS 
+            + CharToken(',') + Node(Number).SetName("b") + WS 
+            + Opt(CharToken(',') + Node(Number).SetName("a") + WS) + CharToken('|'));
+
         public static Rule NumberOrVector = Number | Vector;
-        public static Rule ImageReference = Node(StringToken("image") + SharedGrammar.Parenthesize(Integer));
+        public static Rule InputReference = Node(StringToken("input") + MatchChar(':') + Integer);
         public static Rule QuotedString = Node(MatchChar('"') + AdvanceWhileNot(MatchChar('"')) + MatchChar('"'));
-        public static Rule Constant = Number | QuotedString;
+        public static Rule Literal = Number | QuotedString;
         public static Rule Identifier = Node(SharedGrammar.Identifier);
         public static Rule TypeName = Node(SharedGrammar.Identifier);
-        public static Rule Symbol = Node(Identifier);
 
         public static Rule RecStatements = Recursive(() => ZeroOrMore(Statement + WS));
         public static Rule RecFuncStatements = Recursive(() => ZeroOrMore(FuncStatement + WS));
@@ -39,14 +44,14 @@ namespace ImageProcessor.Shaders
         public static Rule PrefixOp = Node(SharedGrammar.MatchStringSet("! -"));
         public static Rule BinaryOp = Node(SharedGrammar.MatchStringSet("== < <= >= > + - * /"));
         public static Rule PrefixExpr = Node(PrefixOp + Recursive(() => SimpleExpr));
-        public static Rule SimpleExpr = ImageReference | Identifier | Vector | Number;        
+        public static Rule SimpleExpr = InputReference | Identifier | Vector | Number;        
         public static Rule AssignmentExpr = Node(Identifier + WS + CharToken('=') + RecExpr);
         public static Rule UnaryExpr = PrefixExpr | SimpleExpr;
         public static Rule BinaryExpression = Node(UnaryExpr + WS + BinaryOp + WS + RecExpr);
         public static Rule Expr = (AssignmentExpr | BinaryExpression | UnaryExpr) + WS;
 
         // Statements
-        public static Rule MetaStatement = Node(Identifier + WS + Node(Constant).SetName("Value"));
+        public static Rule MetaStatement = Node(Identifier + WS + Node(Literal).SetName("Value"));
         public static Rule Comment = CharToken('#') + AdvanceWhileNot(MatchChar('\n'));
         public static Rule VarDecl = Node(StringToken("def") + Identifier + WS + Opt(AssignOp + Expr));
 
