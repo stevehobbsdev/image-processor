@@ -63,7 +63,7 @@ namespace ImageProcessor.Shaders
         public static Rule VarDecl = Node(StringToken("def") + Identifier + WS + Opt(AssignOp + Expr));
 
         public static Rule ExprStatement = Node(Expr + AdvanceWhileNot(MatchChar('\n')));
-        public static Rule Statement = VarDecl | ExprStatement | ReturnStatement | MetaStatement | Comment | Func;
+        public static Rule Statement = VarDecl | MetaStatement | ExprStatement | ReturnStatement | Comment | Func;
         public static Rule ShaderProgram = Node(ZeroOrMore(Statement + WS) + End);
 
         public static Rule CharToken(char c)
