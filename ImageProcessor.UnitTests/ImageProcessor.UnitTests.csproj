@@ -67,8 +67,10 @@
   </Choose>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ShaderCompiler\ExpressionTests.cs" />
     <Compile Include="ShaderCompiler\LiteralTests.cs" />
     <Compile Include="ShaderCompiler\NodeExtensions.cs" />
+    <Compile Include="ShaderCompiler\StatementTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

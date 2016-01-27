@@ -1,7 +1,7 @@
 ﻿# This is a comment
 
-shader 1.0		# always use 1.0
-name "Test shader"
+shader: 1.0		# always use 1.0
+name: "Test shader"
 
 def ambientColor
 def baseColor

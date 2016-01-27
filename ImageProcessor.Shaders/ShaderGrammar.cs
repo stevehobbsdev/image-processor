@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Text.RegularExpressions;
 using Diggins.Jigsaw;
 
@@ -9,55 +10,60 @@ namespace ImageProcessor.Shaders
         public static Rule WS = SharedGrammar.WS;
 
         // Primitives
-        public static Rule Float = Node(Opt(MatchChar('-')) + SharedGrammar.Float);
-        public static Rule Integer = Node(Opt(MatchChar('-')) + SharedGrammar.Integer);
+        public static Rule RecStatements = Recursive(() => ZeroOrMore(Statement + WS));
+        public static Rule RecExpr = Recursive(() => Expr);
+
+        public static Rule Float = Node(SharedGrammar.Float);
+        public static Rule Integer = Node(SharedGrammar.Integer);
         public static Rule Number = Node(Float | Integer);
+        public static Rule Boolean = Node(SharedGrammar.MatchStringSet("yes no true false"));
 
         public static Rule Vector = Node(CharToken('|') 
-            + Node(Number).SetName("r") + WS 
-            + CharToken(',') + Node(Number).SetName("g") + WS 
-            + CharToken(',') + Node(Number).SetName("b") + WS 
-            + Opt(CharToken(',') + Node(Number).SetName("a") + WS) + CharToken('|'));
+            + Node(RecExpr).SetName("r") + WS 
+            + CharToken(',') + Node(RecExpr).SetName("g") + WS 
+            + CharToken(',') + Node(RecExpr).SetName("b") + WS 
+            + Opt(CharToken(',') + Node(RecExpr).SetName("a") + WS) + CharToken('|'));
 
         public static Rule NumberOrVector = Number | Vector;
-        public static Rule InputReference = Node(StringToken("input") + MatchChar(':') + Integer);
         public static Rule QuotedString = Node(MatchChar('"') + AdvanceWhileNot(MatchChar('"')) + MatchChar('"'));
-        public static Rule Literal = Number | QuotedString;
+        public static Rule Literal = Boolean | Number | QuotedString;
         public static Rule Identifier = Node(SharedGrammar.Identifier);
         public static Rule TypeName = Node(SharedGrammar.Identifier);
-
-        public static Rule RecStatements = Recursive(() => ZeroOrMore(Statement + WS));
-        public static Rule RecFuncStatements = Recursive(() => ZeroOrMore(FuncStatement + WS));
-        public static Rule RecExpr = Recursive(() => Expr);
 
         // Operators
         public static Rule AssignOp = CharToken('=');
 
         // Methods
-        public static Rule Parameter = Node(Identifier);
-        public static Rule Arguments = Node(SharedGrammar.Parenthesize(SharedGrammar.CommaDelimited(Parameter)) + WS);
-        public static Rule ReturnStatement = Node(StringToken("return") + (Identifier | Vector | Number) + WS);
-        public static Rule FuncBody = Node(RecFuncStatements + WS);
-        public static Rule Func = Node(MatchChar('.') + Identifier + WS + Arguments + FuncBody + MatchString(".end"));
+        public static Rule Params = Node(SharedGrammar.Parenthesize(SharedGrammar.CommaDelimited(Identifier)) + WS);
+        public static Rule Arguments = Node(SharedGrammar.Parenthesize(SharedGrammar.CommaDelimited(RecExpr)) + WS);
+
+        public static Rule ReturnStatement = Node(StringToken("return") + RecExpr + WS);
+        public static Rule FuncBody = Node(RecStatements + WS);
+        public static Rule Func = Node(MatchChar('.') + Identifier + WS + Params + FuncBody + MatchString(".end"));
 
         // Expressions
+        public static Rule Index = Node(CharToken('[') + RecExpr + CharToken(']'));
+        public static Rule Field = Node(MatchChar('.') + Identifier);
         public static Rule PrefixOp = Node(SharedGrammar.MatchStringSet("! -"));
-        public static Rule BinaryOp = Node(SharedGrammar.MatchStringSet("== < <= >= > + - * /"));
-        public static Rule PrefixExpr = Node(PrefixOp + Recursive(() => SimpleExpr));
-        public static Rule SimpleExpr = InputReference | Identifier | Vector | Number;        
-        public static Rule AssignmentExpr = Node(Identifier + WS + CharToken('=') + RecExpr);
-        public static Rule UnaryExpr = PrefixExpr | SimpleExpr;
+        public static Rule BinaryOp = Node(SharedGrammar.MatchStringSet("== <= < >= > != + - ** * / %"));
+        public static Rule ParenExpr = Node(SharedGrammar.Parenthesize(RecExpr));
+        public static Rule PrefixExpr = Node(PrefixOp + Recursive(() => PrefixOrLeafExpr));
+        public static Rule LeafExpr = ParenExpr | Boolean | Identifier | Vector | Number;
+        public static Rule PrefixOrLeafExpr = PrefixExpr | LeafExpr;
+        public static Rule PostfixOp = Node(Index | Field);
+        public static Rule PostfixExpr = Node(PrefixOrLeafExpr + OneOrMore(PostfixOp + WS));
+        public static Rule AssignmentExpr = Node((PostfixExpr | Identifier) + WS + CharToken('=') + RecExpr);
+        public static Rule UnaryExpr = PostfixExpr | PrefixOrLeafExpr;
         public static Rule BinaryExpression = Node(UnaryExpr + WS + BinaryOp + WS + RecExpr);
         public static Rule Expr = (AssignmentExpr | BinaryExpression | UnaryExpr) + WS;
 
         // Statements
-        public static Rule MetaStatement = Node(Identifier + WS + Node(Literal).SetName("Value"));
+        public static Rule MetaStatement = Node(Identifier + WS + CharToken(':') + Node(Literal).SetName("Value"));
         public static Rule Comment = CharToken('#') + AdvanceWhileNot(MatchChar('\n'));
         public static Rule VarDecl = Node(StringToken("def") + Identifier + WS + Opt(AssignOp + Expr));
 
         public static Rule ExprStatement = Node(Expr + AdvanceWhileNot(MatchChar('\n')));
-        public static Rule FuncStatement = VarDecl | ReturnStatement | ExprStatement | Comment;
-        public static Rule Statement = VarDecl | ExprStatement | MetaStatement  | Comment | Func;
+        public static Rule Statement = VarDecl | ExprStatement | ReturnStatement | MetaStatement | Comment | Func;
         public static Rule ShaderProgram = Node(ZeroOrMore(Statement + WS) + End);
 
         public static Rule CharToken(char c)
