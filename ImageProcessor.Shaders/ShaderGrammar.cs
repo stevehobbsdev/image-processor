@@ -44,13 +44,14 @@ namespace ImageProcessor.Shaders
         // Expressions
         public static Rule Index = Node(CharToken('[') + RecExpr + CharToken(']'));
         public static Rule Field = Node(MatchChar('.') + Identifier);
+        public static Rule ArgList = Node(SharedGrammar.Parenthesize(SharedGrammar.CommaDelimited(RecExpr)));
         public static Rule PrefixOp = Node(SharedGrammar.MatchStringSet("! -"));
         public static Rule BinaryOp = Node(SharedGrammar.MatchStringSet("== <= < >= > != + - ** * / %"));
         public static Rule ParenExpr = Node(SharedGrammar.Parenthesize(RecExpr));
         public static Rule PrefixExpr = Node(PrefixOp + Recursive(() => PrefixOrLeafExpr));
         public static Rule LeafExpr = ParenExpr | Boolean | Identifier | Vector | Number;
         public static Rule PrefixOrLeafExpr = PrefixExpr | LeafExpr;
-        public static Rule PostfixOp = Node(Index | Field);
+        public static Rule PostfixOp = Node(Index | Field | ArgList);
         public static Rule PostfixExpr = Node(PrefixOrLeafExpr + OneOrMore(PostfixOp + WS));
         public static Rule AssignmentExpr = Node((PostfixExpr | Identifier) + WS + CharToken('=') + RecExpr);
         public static Rule UnaryExpr = PostfixExpr | PrefixOrLeafExpr;
@@ -60,7 +61,7 @@ namespace ImageProcessor.Shaders
         // Statements
         public static Rule MetaStatement = Node(Identifier + WS + CharToken(':') + Node(Literal).SetName("Value"));
         public static Rule Comment = CharToken('#') + AdvanceWhileNot(MatchChar('\n'));
-        public static Rule VarDecl = Node(StringToken("def") + Identifier + WS + Opt(AssignOp + Expr));
+        public static Rule VarDecl = Node(StringToken("let") + Identifier + WS + Opt(AssignOp + Expr));
 
         public static Rule ExprStatement = Node(Expr + AdvanceWhileNot(MatchChar('\n')));
         public static Rule Statement = VarDecl | MetaStatement | ExprStatement | ReturnStatement | Comment | Func;

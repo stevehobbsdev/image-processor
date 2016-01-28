@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Linq;
 using FluentAssertions;
 using ImageProcessor.Shaders;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -203,6 +199,20 @@ namespace ImageProcessor.UnitTests.ShaderCompiler
         public void Postfix_expression_vector_field()
         {
             ShaderGrammar.PostfixExpr.Parse("|1,2,3|.r");
+        }
+
+        [TestMethod]
+        public void Postfix_Expression_argument_list()
+        {
+            ShaderGrammar.PostfixExpr.Parse("someFunc(1, 2, 3)");
+            ShaderGrammar.PostfixExpr.Parse("anotherFunc(|0, 0, 0 |, r, g, b, 0.1)");
+            ShaderGrammar.PostfixExpr.Parse("printValue(1 + 2)");
+        }
+
+        [TestMethod]
+        public void Comment_expression()
+        {
+            ShaderGrammar.Comment.Parse("# This is a comment, where I can type anything I want");
         }
     }
 }

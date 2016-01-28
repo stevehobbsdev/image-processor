@@ -81,9 +81,6 @@
       <Name>ImageProcessor.Shaders</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup>
-    <Content Include="CodeProjectArticle.html" />
-  </ItemGroup>
   <Choose>
     <When Condition="'$(VisualStudioVersion)' == '10.0' And '$(IsCodedUITest)' == 'True'">
       <ItemGroup>

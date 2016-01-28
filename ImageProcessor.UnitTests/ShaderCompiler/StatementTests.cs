@@ -46,14 +46,14 @@ namespace ImageProcessor.UnitTests.ShaderCompiler
         [TestMethod]
         public void Can_declare_an_empty_variable()
         {
-            var node = ShaderGrammar.VarDecl.Parse("def myVar").First();
+            var node = ShaderGrammar.VarDecl.Parse("let myVar").First();
             node.Nodes.FindByLabel("Identifier").Text.Should().Be("myVar");
         }
 
         [TestMethod]
         public void Can_declare_a_variable_with_initial_float_value()
         {
-            var node = ShaderGrammar.VarDecl.Parse("def myVar = 1.0").First();
+            var node = ShaderGrammar.VarDecl.Parse("let myVar = 1.0").First();
 
             node.Nodes.FindByLabel("Identifier").Text.Should().Be("myVar");
             node.Nodes[1].Text.Should().Be("1.0");
